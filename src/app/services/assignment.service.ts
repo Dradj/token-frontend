@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import {AssignmentModel} from '../model/assignment.model';
-import {firstValueFrom} from 'rxjs';
+import {firstValueFrom, Observable} from 'rxjs';
 import {HttpClient} from '@angular/common/http';
 
 
@@ -10,17 +10,10 @@ export class AssignmentService {
 
   constructor(private http: HttpClient) {}
 
-  async getAssignmentsForCourse(courseId: number): Promise<AssignmentModel[]> {
-    try {
-      // Используем firstValueFrom для получения данных как синхронного результата
-      return await firstValueFrom(
-        this.http.get<AssignmentModel[]>(`${this.apiUrl}/courses/${courseId}/assignments`)
-      );
-    } catch (error) {
-      console.error('Ошибка при получении заданий:', error);
-      return [];  // Возвращаем пустой массив в случае ошибки
-    }
+  getAssignmentsForCourse(courseId: number): Observable<AssignmentModel[]> {
+    return this.http.get<AssignmentModel[]>(`${this.apiUrl}/courses/${courseId}/assignments`);
   }
+
 }
 
 
