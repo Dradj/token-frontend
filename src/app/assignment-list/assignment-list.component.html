@@ -1,0 +1,16 @@
+<section *ngIf="assignments.length > 0; else noAssignments" class="assignments-section">
+  <h2>Задания по курсу</h2>
+  <ul class="assignment-list">
+    <li *ngFor="let assignment of assignments">
+      <h3>{{ assignment.title }}</h3>
+      <p>{{ assignment.description }}</p>
+    </li>
+  </ul>
+</section>
+
+<ng-template #noAssignments>
+  <p>Задания не найдены или курс не выбран.</p>
+  <p *ngIf="errorMessage">{{ errorMessage }}</p>
+</ng-template>
+
+

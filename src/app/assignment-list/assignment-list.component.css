@@ -1,0 +1,19 @@
+.assignments-section {
+  margin-top: 2rem;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+.assignment-list {
+  list-style: none;
+  display: grid;
+  gap: 1rem;
+}
+
+.assignment-list li {
+  padding: 1rem;
+  background: #eef2f7;
+  border-radius: 6px;
+}

@@ -1,12 +1,24 @@
-import { Component } from '@angular/core';
+import { Component }   from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import {AuthService} from './services/auth.service';
+import {UserService} from './services/user.service';
+import {catchError, finalize, of, switchMap} from 'rxjs';
+import {CommonModule} from '@angular/common';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  standalone: true,
+  imports: [RouterOutlet, CommonModule],
+  templateUrl: 'app.component.html',
 })
 export class AppComponent {
-  title = 'token-frontend';
+  loading = true;
+
+  constructor(private authService: AuthService) {
+    this.authService.tryRestoreSession().pipe(
+      finalize(() => this.loading = false)
+    ).subscribe();
+  }
 }
+
+
