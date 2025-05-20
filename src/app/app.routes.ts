@@ -1,10 +1,11 @@
 import { Routes } from '@angular/router';
-//import { authGuard } from './guards/auth.guard';
 import {CoursesComponent} from './courses/courses.component';
 import {LoginComponent} from './login/login.component';
 import {AssignmentListComponent} from './assignment-list/assignment-list.component';
 import {MainLayoutComponent} from './main-layout/main-layout.component';
 import {AuthLayoutComponent} from './auth-layout/auth-layout.component';
+import {LoginRedirectGuard} from './guards/login-redirect.guard';
+import {AuthGuard} from './guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -12,18 +13,23 @@ export const routes: Routes = [
     component: AuthLayoutComponent,
     children: [
       { path: '', redirectTo: 'login', pathMatch: 'full' },
-      { path: 'login', component: LoginComponent },
+      {
+        path: 'login',
+        component: LoginComponent,
+        canActivate: [LoginRedirectGuard]
+      },
     ],
   },
   {
     path: '',
     component: MainLayoutComponent,
-    //canActivate: [authGuard],
+    canActivate: [AuthGuard],
     children: [
       { path: 'courses', component: CoursesComponent },
       { path: 'courses/assignments', component: AssignmentListComponent },
-      // позже сюда можно добавить: оценки, расписание, товары и т.д.
+      // можно добавлять другие защищённые страницы здесь
     ],
   },
   { path: '**', redirectTo: 'login' },
 ];
+

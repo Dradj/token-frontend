@@ -1,4 +1,4 @@
-import { Component }   from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import {AuthService} from './services/auth.service';
 import {UserService} from './services/user.service';
@@ -11,13 +11,11 @@ import {CommonModule} from '@angular/common';
   imports: [RouterOutlet, CommonModule],
   templateUrl: 'app.component.html',
 })
-export class AppComponent {
-  loading = true;
+export class AppComponent implements OnInit {
+  constructor(private authService: AuthService) {}
 
-  constructor(private authService: AuthService) {
-    this.authService.tryRestoreSession().pipe(
-      finalize(() => this.loading = false)
-    ).subscribe();
+  ngOnInit() {
+    this.authService.refreshAccessToken().subscribe();
   }
 }
 

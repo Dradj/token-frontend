@@ -1,44 +1,79 @@
 import {Injectable} from '@angular/core';
 import {HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest} from '@angular/common/http';
 import {AuthService} from '../services/auth.service';
-import {catchError, Observable, switchMap, take, throwError} from 'rxjs';
+import {BehaviorSubject, catchError, filter, Observable, switchMap, take, throwError} from 'rxjs';
+import {Router} from '@angular/router';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
-  constructor(private authService: AuthService) {}
+  private isRefreshing = false;
+  private refreshSubject = new BehaviorSubject<string | null>(null);
+
+  constructor(private authService: AuthService, private router: Router) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    // 1. Исключаем запросы на обновление токена
     if (req.url.endsWith('/api/auth/refresh')) {
       return next.handle(req);
     }
 
-    const accessToken = this.authService.getAccessToken();
-    const authReq = accessToken
-      ? req.clone({ setHeaders: { Authorization: `Bearer ${accessToken}` } })
-      : req;
+    // 2. Добавляем токен к запросам, требующим авторизации
+    const authReq = this.addAuthHeader(req);
 
     return next.handle(authReq).pipe(
       catchError((error: HttpErrorResponse) => {
-        if (error.status === 401) {
-          return this.authService.refreshAccessToken().pipe(
-            switchMap(() => {
-              const newToken = this.authService.getAccessToken();
-              if (!newToken) return throwError(() => error);
+        // 3. Обрабатываем только 401 ошибки для авторизованных запросов
+        if (error.status !== 401 || this.isPublicRequest(req)) {
+          return throwError(() => error);
+        }
 
-              const retryReq = req.clone({
-                setHeaders: { Authorization: `Bearer ${newToken}` },
-              });
-              return next.handle(retryReq);
-            }),
-            catchError(err => {
-              this.authService.logout();
-              return throwError(() => err);
-            })
+        // 4. Обработка конкурентных запросов
+        if (this.isRefreshing) {
+          return this.refreshSubject.pipe(
+            filter(token => token !== null),
+            take(1),
+            switchMap(() => next.handle(this.addAuthHeader(req)))
           );
         }
-        return throwError(() => error);
+
+        this.isRefreshing = true;
+        this.refreshSubject.next(null);
+
+        // 5. Пытаемся обновить токен
+        return this.authService.refreshAccessToken().pipe(
+          switchMap((success) => {
+            if (!success) throw new Error('Refresh failed');
+
+            this.isRefreshing = false;
+            const newToken = this.authService.getAccessToken();
+            this.refreshSubject.next(newToken);
+            return next.handle(this.addAuthHeader(req));
+          }),
+          catchError((err) => {
+            this.isRefreshing = false;
+            this.authService.logout();
+            this.router.navigate(['/login']);
+            return throwError(() => err);
+          })
+        );
       })
     );
+  }
+
+  private addAuthHeader(req: HttpRequest<any>): HttpRequest<any> {
+    const token = this.authService.getAccessToken();
+    return token && this.requiresAuth(req)
+      ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
+      : req;
+  }
+
+  private requiresAuth(req: HttpRequest<any>): boolean {
+    // 6. Логика определения защищенных эндпоинтов
+    return !req.url.includes('/public/');
+  }
+
+  private isPublicRequest(req: HttpRequest<any>): boolean {
+    return !this.requiresAuth(req);
   }
 }
 

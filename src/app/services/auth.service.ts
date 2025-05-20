@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {BehaviorSubject, catchError, of, tap} from 'rxjs';
+import {BehaviorSubject, catchError, map, Observable, of, switchMap, tap} from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -8,8 +8,10 @@ import {BehaviorSubject, catchError, of, tap} from 'rxjs';
 export class AuthService {
   private accessToken: string | null = null;
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
-
   isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
+
+  private isInitializedSubject = new BehaviorSubject<boolean>(false);
+  isInitialized$ = this.isInitializedSubject.asObservable();
 
   constructor(private http: HttpClient) {}
 
@@ -37,8 +39,8 @@ export class AuthService {
     return this.accessToken;
   }
 
-  // Метод обновления токена
-  refreshAccessToken() {
+
+  refreshAccessToken(): Observable<boolean> {
     console.log('[AuthService] Отправка запроса на /refresh');
     return this.http.post<{ accessToken: string }>(
       'http://localhost:8080/api/auth/refresh',
@@ -48,21 +50,33 @@ export class AuthService {
       tap(response => {
         console.log('[AuthService] Получен новый access token:', response.accessToken);
         this.accessToken = response.accessToken;
+        this.isAuthenticatedSubject.next(true); // Обновляем состояние аутентификации
+        this.isInitializedSubject.next(true);
       }),
+      switchMap(() => of(true)),
       catchError(err => {
         console.error('[AuthService] Ошибка при обновлении токена:', err);
         this.accessToken = null;
         this.isAuthenticatedSubject.next(false);
-        return of(null);
+        this.isInitializedSubject.next(true);
+        return of(false);
       })
     );
   }
 
-  tryRestoreSession() {
-    return this.refreshAccessToken().pipe(
-      tap(token => {
-        if (token) this.isAuthenticatedSubject.next(true);
-      })
+  // Метод обновления токена
+  // В AuthService добавьте метод для проверки статуса
+  get isAuthenticated(): boolean {
+    return this.isAuthenticatedSubject.value;
+  }
+
+  checkSession(): Observable<boolean> {
+    return this.http.get('http://localhost:8080/api/auth/check-session', {
+      withCredentials: true,
+      responseType: 'text'
+    }).pipe(
+      map(() => true),
+      catchError(() => of(false))
     );
   }
 }

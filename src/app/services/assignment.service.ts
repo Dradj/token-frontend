@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import {AssignmentModel} from '../model/assignment.model';
-import {firstValueFrom, Observable} from 'rxjs';
+import {Observable} from 'rxjs';
 import {HttpClient} from '@angular/common/http';
 
 
