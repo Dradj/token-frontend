@@ -64,12 +64,6 @@ export class AuthService {
     );
   }
 
-  // Метод обновления токена
-  // В AuthService добавьте метод для проверки статуса
-  get isAuthenticated(): boolean {
-    return this.isAuthenticatedSubject.value;
-  }
-
   checkSession(): Observable<boolean> {
     return this.http.get('http://localhost:8080/api/auth/check-session', {
       withCredentials: true,

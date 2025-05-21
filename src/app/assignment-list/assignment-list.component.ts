@@ -1,16 +1,15 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
-import {HttpClient, HttpHeaders} from '@angular/common/http';
+import {Component, OnInit} from '@angular/core';
 import {NgForOf, NgIf} from '@angular/common';
 import {CourseService} from '../services/course.service';
 import {AuthService} from '../services/auth.service';
 import {AssignmentModel} from '../model/assignment.model';
-import {filter, firstValueFrom, of, switchMap, take} from 'rxjs';
-import {AssignmentService} from '../services/assignment.service';
+import {filter, of, switchMap, take} from 'rxjs';
+import {RouterLink} from '@angular/router';
 
 @Component({
   selector: 'app-assignment-list',
   standalone: true,
-  imports: [NgIf, NgForOf],
+  imports: [NgIf, NgForOf, RouterLink],
   templateUrl: './assignment-list.component.html',
   styleUrls: ['./assignment-list.component.css']
 })
@@ -20,7 +19,6 @@ export class AssignmentListComponent implements OnInit {
   loading = true;
 
   constructor(
-    private assignmentService: AssignmentService,
     private courseService: CourseService,
     private authService: AuthService
   ) {}
@@ -37,7 +35,7 @@ export class AssignmentListComponent implements OnInit {
             this.loading = false;
             return of([]); // пустой observable если нет курса
           }
-          return this.assignmentService.getAssignmentsForCourse(courseId);
+          return this.courseService.getAssignmentsForCourse(courseId);
         })
       )
       .subscribe({

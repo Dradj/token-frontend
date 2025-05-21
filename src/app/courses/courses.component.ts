@@ -1,9 +1,8 @@
 import {Component, OnInit} from '@angular/core';
 import {CourseService} from '../services/course.service';
-import {AuthService} from '../services/auth.service';
 import {Course} from '../model/course.model';
-import {AsyncPipe, NgForOf, NgIf} from '@angular/common';
-import {RouterLink} from '@angular/router';
+import {NgForOf, NgIf} from '@angular/common';
+
 
 import { Router } from '@angular/router';
 import {filter, firstValueFrom, take} from 'rxjs';

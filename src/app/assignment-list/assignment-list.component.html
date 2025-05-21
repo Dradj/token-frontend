@@ -2,8 +2,11 @@
   <h2>Задания по курсу</h2>
   <ul class="assignment-list">
     <li *ngFor="let assignment of assignments">
-      <h3>{{ assignment.title }}</h3>
-      <p>{{ assignment.description }}</p>
+      <a [routerLink]="['/assignments', assignment.id]" class="assignment-link">
+        <h3>{{ assignment.title }}</h3>
+      </a>
+        <p>{{ assignment.description }}</p>
+
     </li>
   </ul>
 </section>

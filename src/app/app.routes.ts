@@ -6,6 +6,7 @@ import {MainLayoutComponent} from './main-layout/main-layout.component';
 import {AuthLayoutComponent} from './auth-layout/auth-layout.component';
 import {LoginRedirectGuard} from './guards/login-redirect.guard';
 import {AuthGuard} from './guards/auth.guard';
+import {AssignmentDetailsComponent} from './assignment-details/assignment-details.component';
 
 export const routes: Routes = [
   {
@@ -27,6 +28,9 @@ export const routes: Routes = [
     children: [
       { path: 'courses', component: CoursesComponent },
       { path: 'courses/assignments', component: AssignmentListComponent },
+      {
+        path: 'assignments/:id', component: AssignmentDetailsComponent
+      },
       // можно добавлять другие защищённые страницы здесь
     ],
   },

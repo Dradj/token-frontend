@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient} from '@angular/common/http';
-import {firstValueFrom} from 'rxjs';
+import {firstValueFrom, Observable} from 'rxjs';
 import {Course} from '../model/course.model';
 import {environment} from '../../environments/environment';
+import {AssignmentModel} from '../model/assignment.model';
 
 
 @Injectable({ providedIn: 'root' })
@@ -31,6 +32,10 @@ export class CourseService {
     // Извлекаем ID курса из sessionStorage
     const storedCourseId = sessionStorage.getItem('selectedCourseId');
     return storedCourseId ? parseInt(storedCourseId, 10) : null;
+  }
+
+  getAssignmentsForCourse(courseId: number): Observable<AssignmentModel[]> {
+    return this.http.get<AssignmentModel[]>(`${this.apiUrl}/courses/${courseId}/assignments`);
   }
 }
 

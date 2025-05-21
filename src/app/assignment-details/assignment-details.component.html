@@ -1,0 +1,53 @@
+<div *ngIf="isLoading" class="loading-indicator">
+  <div class="spinner"></div>
+  <span>Загрузка данных...</span>
+</div>
+
+<div *ngIf="!isLoading">
+  <div *ngIf="assignment">
+    <h2>{{ assignment.title }}</h2>
+    <p>{{ assignment.description }}</p>
+    <p>Срок сдачи: {{ assignment.dueDate | date:'dd.MM.yyyy' }}</p>
+
+    <section class="files-section">
+      <h3>Методические материалы</h3>
+      <ul class="file-list">
+        <li *ngFor="let m of manuals">
+          <a [href]="m.downloadUrl" target="_blank" class="file-link">
+            📄 {{ m.fileName }}
+          </a>
+        </li>
+      </ul>
+    </section>
+
+    <section *ngIf="role === 'ROLE_STUDENT'" class="student-section">
+      <div class="upload-box">
+        <h3>Загрузить решение</h3>
+        <input type="file" (change)="onStudentFileSelected($event)" class="file-input">
+        <button
+          (click)="uploadStudent()"
+          [disabled]="!studentFile"
+          class="upload-button"
+        >
+          {{ studentFile ? 'Загрузить файл' : 'Выберите файл' }}
+        </button>
+      </div>
+
+      <div *ngIf="studentSubmissions.length" class="submissions">
+        <h4>Ваши предыдущие сдачи:</h4>
+        <ul class="submission-list">
+          <li *ngFor="let s of studentSubmissions" class="submission-item">
+            <a (click)="openPdf(s.downloadUrl, s.fileName)" class="file-link">
+              📤 {{ s.fileName }}
+            </a>
+
+          </li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <div *ngIf="!assignment" class="no-data">
+    Задание не найдено
+  </div>
+</div>

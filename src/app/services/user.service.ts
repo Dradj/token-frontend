@@ -25,11 +25,6 @@ export class UserService {
       tap(user => this.currentUserSubject.next(user))
     );
   }
-
-  // Можно использовать в Guard’ах
-  getCurrentUser(): User | null {
-    return this.currentUserSubject.value;
-  }
 }
 
 
