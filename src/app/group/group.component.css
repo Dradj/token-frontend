@@ -1,0 +1,69 @@
+/* group.component.css */
+.group-card {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.group-name {
+  color: #34495e;
+  margin: 0 0 1rem 0;
+  font-size: 1.2rem;
+}
+
+.student-item {
+  background: white;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.student-name {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.assignment {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.lab-number {
+  min-width: 120px;
+  color: #3498db;
+}
+
+.file-name {
+  flex-grow: 1;
+  color: #7f8c8d;
+}
+
+.submission-date {
+  color: #95a5a6;
+  font-size: 0.9rem;
+}
+
+.no-assignments {
+  color: #95a5a6;
+  font-style: italic;
+  padding: 0.5rem 0;
+}
+
+
+
+/* group.component.css */
+.assignment {
+  cursor: pointer;
+  transition: background-color 0.2s;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.assignment:hover {
+  background-color: #f5f5f5;
+}

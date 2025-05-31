@@ -53,3 +53,15 @@
   padding: 2rem;
   color: #e74c3c;
 }
+
+.delete-btn {
+  background: none;
+  border: none;
+  color: #ff4444;
+  cursor: pointer;
+  margin-left: 1rem;
+}
+
+.delete-btn:hover {
+  color: #cc0000;
+}

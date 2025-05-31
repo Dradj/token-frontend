@@ -7,6 +7,7 @@ import {AuthLayoutComponent} from './auth-layout/auth-layout.component';
 import {LoginRedirectGuard} from './guards/login-redirect.guard';
 import {AuthGuard} from './guards/auth.guard';
 import {AssignmentDetailsComponent} from './assignment-details/assignment-details.component';
+import {TeacherDashboardComponent} from './teacher-dashboard/teacher-dashboard.component';
 
 export const routes: Routes = [
   {
@@ -26,8 +27,14 @@ export const routes: Routes = [
     component: MainLayoutComponent,
     canActivate: [AuthGuard],
     children: [
+      {
+        path: 'teacher-dashboard', component: TeacherDashboardComponent
+      },
       { path: 'courses', component: CoursesComponent },
       { path: 'courses/assignments', component: AssignmentListComponent },
+      {
+        path: 'teacher/assignments/:id', component: AssignmentDetailsComponent
+      },
       {
         path: 'assignments/:id', component: AssignmentDetailsComponent
       },

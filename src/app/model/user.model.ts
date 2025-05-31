@@ -7,3 +7,5 @@ export interface User {
   role: string;
   groupId: number;
 }
+
+

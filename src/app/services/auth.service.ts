@@ -15,8 +15,8 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
-  login(email: string, password: string) {
-    return this.http.post<{ accessToken: string }>(
+  login(email: string, password: string): Observable<{ accessToken: string, role: string }> {
+    return this.http.post<{ accessToken: string, role: any }>(
       'http://localhost:8080/api/auth/login',
       { email, password },
       { withCredentials: true }).pipe(
@@ -28,12 +28,11 @@ export class AuthService {
   }
 
   logout() {
-    this.accessToken = null;
-    this.isAuthenticatedSubject.next(false);
     return this.http.post('http://localhost:8080/api/auth/logout', {}, {
       withCredentials: true
     });
   }
+
 
   getAccessToken(): string | null {
     return this.accessToken;
@@ -63,6 +62,7 @@ export class AuthService {
       })
     );
   }
+
 
   checkSession(): Observable<boolean> {
     return this.http.get('http://localhost:8080/api/auth/check-session', {

@@ -13,13 +13,35 @@
       <h3>Методические материалы</h3>
       <ul class="file-list">
         <li *ngFor="let m of manuals">
-          <a [href]="m.downloadUrl" target="_blank" class="file-link">
+          <a (click)="openPdf(m.downloadUrl, m.fileName)" class="file-link">
             📄 {{ m.fileName }}
           </a>
+          <!-- Добавляем проверку роли -->
+          <button
+            *ngIf="role === 'ROLE_TEACHER'"
+            (click)="confirmDelete(m)"
+            class="delete-btn"
+          >
+            🗑️ Удалить
+          </button>
         </li>
       </ul>
+
+      <!-- Секция для загрузки методичек преподавателем -->
+      <div *ngIf="role === 'ROLE_TEACHER'" class="upload-box">
+        <h4>Добавить методический материал</h4>
+        <input type="file" (change)="onManualFileSelected($event)" class="file-input">
+        <button
+          (click)="uploadManual()"
+          [disabled]="!manualFile"
+          class="upload-button"
+        >
+          {{ manualFile ? 'Загрузить' : 'Выберите файл' }}
+        </button>
+      </div>
     </section>
 
+    <!-- Секция для студентов -->
     <section *ngIf="role === 'ROLE_STUDENT'" class="student-section">
       <div class="upload-box">
         <h3>Загрузить решение</h3>
@@ -40,7 +62,42 @@
             <a (click)="openPdf(s.downloadUrl, s.fileName)" class="file-link">
               📤 {{ s.fileName }}
             </a>
+            <button
+              (click)="confirmDelete(s)"
+              class="delete-btn"
+            >
+              🗑️ Удалить
+            </button>
+          </li>
+        </ul>
+      </div>
+    </section>
 
+    <!-- Секция для преподавателя -->
+    <section *ngIf="role === 'ROLE_TEACHER'" class="teacher-section">
+      <div *ngIf="studentSubmissions.length">
+        <h3>Работы студента</h3>
+        <ul class="submission-list">
+          <li *ngFor="let s of studentSubmissions" class="submission-item">
+            <a (click)="openPdf(s.downloadUrl, s.fileName)" class="file-link">
+              📤 {{ s.fileName }} ({{ s.submittedAt | date:'dd.MM.yyyy HH:mm' }})
+            </a>
+            <div class="grade-control">
+              <input
+                type="number"
+
+                min="0"
+                max="100"
+                placeholder="Оценка"
+                class="grade-input"
+              >
+              <button
+                (click)="saveGrade(s)"
+                class="save-btn"
+              >
+                Сохранить оценку
+              </button>
+            </div>
           </li>
         </ul>
       </div>

@@ -2,11 +2,11 @@ import {Component, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {AssignmentModel} from '../model/assignment.model';
-import {UploadedFileModel} from '../model/uploaded-file.model';
-import {ActivatedRoute} from '@angular/router';
+import {ActivatedRoute, Router} from '@angular/router';
 import {AssignmentService} from '../services/assignment.service';
 import {UserService} from '../services/user.service';
 import {filter, forkJoin, switchMap, take} from 'rxjs';
+import {SubmittedAssignment} from '../model/submitted-assignment.model';
 
 @Component({
   selector: 'app-assignment-details',
@@ -20,87 +20,89 @@ export class AssignmentDetailsComponent implements OnInit {
   role: string = '';
   isLoading = false;
   currentUserId: number | null = null;
+  isTeacher = false;
+  selectedStudentId: number | null = null;
 
   studentFile: File | null = null;
-
-  studentSubmissions: UploadedFileModel[] = [];
-  manuals: UploadedFileModel[] = [];
+  studentSubmissions: SubmittedAssignment[] = [];
+  manualFile: File | null = null;
+  manuals: SubmittedAssignment[] = [];
 
   constructor(
     private route: ActivatedRoute,
-    private assignmentStudentService: AssignmentService,
+    private router: Router,
+    private assignmentService: AssignmentService,
     private userService: UserService
   ) {}
 
   ngOnInit(): void {
-    const assignmentId = Number(this.route.snapshot.paramMap.get('id'));
     this.isLoading = true;
 
+    // Сначала получаем пользователя
     this.userService.currentUser$.pipe(
       filter(user => !!user),
       take(1),
       switchMap(user => {
+        // Устанавливаем параметры пользователя
         this.role = user!.role;
-        this.currentUserId = user!.id; // Сохраняем ID пользователя
+        this.isTeacher = this.role === 'ROLE_TEACHER';
+        this.currentUserId = user!.id;
+        this.selectedStudentId = Number(sessionStorage.getItem('selectedStudentId'));
+
+        // Теперь получаем остальные данные
+        const assignmentId = Number(this.route.snapshot.paramMap.get('id'));
+
+        const submissions$ = this.isTeacher && this.selectedStudentId
+          ? this.assignmentService.getStudentSubmissions(assignmentId, this.selectedStudentId)
+          : this.assignmentService.getStudentSubmissions(assignmentId, this.currentUserId!);
+
         return forkJoin([
-          this.assignmentStudentService.getAssignmentById(assignmentId),
-          this.assignmentStudentService.getStudentSubmissions(assignmentId, user!.id),
-          this.assignmentStudentService.getManuals(assignmentId)
+          this.assignmentService.getAssignmentById(assignmentId),
+          submissions$,
+          this.assignmentService.getManuals(assignmentId)
         ]);
       })
     ).subscribe({
-      next: ([assignment, studentSubmissions, manuals]) => {
+      next: ([assignment, submissions, manuals]) => {
         this.assignment = assignment;
-        this.studentSubmissions = studentSubmissions;
+        this.studentSubmissions = submissions;
         this.manuals = manuals;
         this.isLoading = false;
       },
       error: (err) => {
         console.error('Error loading data:', err);
         this.isLoading = false;
+        if (this.isTeacher) this.router.navigate(['/teacher-dashboard']);
       }
     });
   }
 
 
   openPdf(url: string, filename: string): void {
-    this.assignmentStudentService.getPdfFile(url).subscribe(blob => {
+    this.assignmentService.getPdfFile(url).subscribe(blob => {
       const fileURL = URL.createObjectURL(blob);
-
-      // Создаем временную ссылку с правильным именем
       const link = document.createElement('a');
       link.href = fileURL;
-      link.download = filename; // Указываем имя файла
+      link.download = filename;
       link.target = '_blank';
       link.click();
-
-      // Очистка через 1 сек
       setTimeout(() => URL.revokeObjectURL(fileURL), 1000);
     });
   }
 
-
-
-
-
-  private reloadFiles(id: number): void {
-    if (!this.currentUserId) return; // Проверяем наличие ID пользователя
-
-    this.isLoading = true;
-    forkJoin([
-      this.assignmentStudentService.getStudentSubmissions(id, this.currentUserId),
-      this.assignmentStudentService.getManuals(id)
-    ]).subscribe({
-      next: ([studentList, manualsList]) => {
-        this.studentSubmissions = studentList;
-        this.manuals = manualsList;
-        this.isLoading = false;
-      },
-      error: (err) => {
-        console.error('Error reloading files:', err);
-        this.isLoading = false;
-      }
-    });
+  confirmDelete(file: SubmittedAssignment) {
+    if (confirm(`Удалить файл ${file.fileName}?`)) {
+      this.assignmentService.deleteFile(file.submissionId).subscribe({
+        next: () => {
+          this.manuals = this.manuals.filter(f => f.submissionId !== file.submissionId);
+          this.studentSubmissions = this.studentSubmissions.filter(f => f.submissionId !== file.submissionId);
+        },
+        error: (err) => {
+          console.error('Ошибка удаления:', err);
+          alert('Не удалось удалить файл');
+        }
+      });
+    }
   }
 
   onStudentFileSelected(e: Event): void {
@@ -109,13 +111,70 @@ export class AssignmentDetailsComponent implements OnInit {
   }
 
   uploadStudent(): void {
-    if (!this.assignment?.id || !this.studentFile) return;
+    if (!this.assignment?.id || !this.studentFile || !this.currentUserId) return;
+
     this.isLoading = true;
-    this.assignmentStudentService.uploadStudentFile(this.assignment.id, this.studentFile)
+
+    this.assignmentService.uploadStudentFile(this.assignment.id, this.studentFile)
+      .pipe(
+        switchMap(() =>
+          this.assignmentService.getStudentSubmissions(this.assignment!.id!, this.currentUserId!)
+        )
+      )
       .subscribe({
-        next: () => this.reloadFiles(this.assignment!.id),
-        error: () => this.isLoading = false
+        next: (updatedSubmissions) => {
+          this.studentSubmissions = updatedSubmissions;
+          this.studentFile = null; // Очищаем выбранный файл
+          this.isLoading = false;
+        },
+        error: (err) => {
+          console.error('Ошибка загрузки:', err);
+          this.isLoading = false;
+        }
       });
+  }
+
+
+
+
+
+  // Метод для выбора файла методички
+  onManualFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files?.length) {
+      this.manualFile = input.files[0];
+    }
+  }
+
+// Метод загрузки методички
+  uploadManual() {
+    if (!this.manualFile || !this.assignment) return;
+
+    // Здесь реализация загрузки на сервер
+    this.assignmentService.uploadMaterialFile(this.assignment.id, this.manualFile)
+      .pipe(
+        switchMap(() =>
+          this.assignmentService.getManuals(this.assignment!.id!)
+        )
+      )
+      .subscribe({
+        next: (updatedMaterials) => {
+          this.manuals = updatedMaterials;
+          this.manualFile = null; // Очищаем выбранный файл
+          this.isLoading = false;
+        },
+        error: (err) => {
+          console.error('Ошибка загрузки:', err);
+          this.isLoading = false;
+        }
+      });
+  }
+
+
+// Заглушка для метода оценки
+  saveGrade(submission: SubmittedAssignment) {
+    console.log('Сохранение оценки для:', submission);
+    // Реализация сохранения оценки на сервере
   }
 }
 

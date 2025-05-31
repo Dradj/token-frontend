@@ -1,0 +1,10 @@
+<div class="course-card">
+  <h2 class="course-title">{{ course.courseName }}</h2>
+
+  <div class="groups-container">
+    <app-group
+      *ngFor="let group of course.groups"
+      [group]="group">
+    </app-group>
+  </div>
+</div>

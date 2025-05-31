@@ -4,7 +4,7 @@ import {Router, RouterLink, RouterLinkActive} from '@angular/router';
 import {UserService} from '../services/user.service';
 import {User} from '../model/user.model';
 import {AsyncPipe, NgIf} from '@angular/common';
-import {Observable} from 'rxjs';
+import {lastValueFrom, Observable} from 'rxjs';
 
 @Component({
   selector: 'app-header',
@@ -30,7 +30,15 @@ export class HeaderComponent {
   }
 
   async logout(): Promise<void> {
-    this.authService.logout();
-    await this.router.navigate(['/login']);
+    try {
+      // 1. Выполняем запрос логаута
+      await lastValueFrom(this.authService.logout());
+
+      // 2. Только если всё прошло успешно — переходим на /login
+      await this.router.navigate(['/login']);
+    } catch (err) {
+      console.error('Ошибка при выходе:', err);
+      // Здесь можно показать уведомление или оставить пользователя на текущей странице
+    }
   }
 }

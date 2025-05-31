@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {CanActivate, Router, UrlTree} from '@angular/router';
+import {ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot, UrlTree} from '@angular/router';
 import {AuthService} from '../services/auth.service';
 import {catchError, map, Observable, of} from 'rxjs';
 
@@ -9,10 +9,18 @@ import {catchError, map, Observable, of} from 'rxjs';
 export class LoginRedirectGuard implements CanActivate {
   constructor(private auth: AuthService, private router: Router) {}
 
-  canActivate(): Observable<boolean | UrlTree> {
+  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean | UrlTree> {
     return this.auth.checkSession().pipe(
-      map(valid => valid ? this.router.parseUrl('/courses') : true),
-      catchError(() => of(true))
+      map(isValid => {
+        if (isValid && state.url === '/login') { // Уже на /login? Редирект!
+          return this.router.parseUrl('/courses');
+        }
+        return isValid ? this.router.parseUrl('/courses') : true;
+      }),
+      catchError(() => {
+        this.auth.logout(); // Очистить остатки токенов
+        return of(true); // Разрешить доступ к /login
+      })
     );
   }
 }

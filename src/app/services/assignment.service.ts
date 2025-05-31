@@ -2,7 +2,8 @@ import { Injectable } from '@angular/core';
 import {AssignmentModel} from '../model/assignment.model';
 import {Observable} from 'rxjs';
 import {HttpClient, HttpHeaders, HttpParams} from '@angular/common/http';
-import {UploadedFileModel} from '../model/uploaded-file.model';
+import {TeacherCourse} from '../model/teacher-courses.model';
+import {SubmittedAssignment} from '../model/submitted-assignment.model';
 
 
 @Injectable({ providedIn: 'root' })
@@ -16,8 +17,8 @@ export class AssignmentService {
     return this.http.get<AssignmentModel>(`${this.apiUrl}/assignments/${id}`);
   }
 
-  getManuals(assignmentId: number): Observable<UploadedFileModel[]> {
-    return this.http.get<UploadedFileModel[]>(`${this.apiUrl}/assignments/${assignmentId}/materials`);
+  getManuals(assignmentId: number): Observable<SubmittedAssignment[]> {
+    return this.http.get<SubmittedAssignment[]>(`${this.apiUrl}/assignments/${assignmentId}/materials`);
   }
 
 
@@ -42,22 +43,34 @@ export class AssignmentService {
   getStudentSubmissions(
     assignmentId: number,
     studentId: number
-  ): Observable<UploadedFileModel[]> {
+  ): Observable<SubmittedAssignment[]> {
     // Создаем параметры запроса
     const params = new HttpParams()
       .set('studentId', studentId.toString());
 
-    return this.http.get<UploadedFileModel[]>(
+    return this.http.get<SubmittedAssignment[]>(
       `${this.apiUrl}/assignments/${assignmentId}/submissions`,
       { params }
     );
   }
 
+  deleteFile(fileId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/assignments/files/${fileId}`);
+  }
 
 
   //логика для преподавателей
-  getAllStudentsFiles(assignmentId: number): Observable<UploadedFileModel[]> {
-    return this.http.get<UploadedFileModel[]>(`${this.apiUrl}/assignments/${assignmentId}/submissions`);
+  getTeacherAssignments() {
+    return this.http.get<TeacherCourse[]>(
+      `${this.apiUrl}/assignments/teacher`,
+      { params: { include: 'groups,students,assignments' } }
+    );
+  }
+
+  uploadMaterialFile(assignmentId: number, file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post(`${this.apiUrl}/assignments/${assignmentId}/materials/upload`, formData);
   }
 
   setGrade(submissionId: number, grade: number): Observable<any> {

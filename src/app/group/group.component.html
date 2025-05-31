@@ -1,0 +1,47 @@
+<!-- group.component.html
+<div class="group-card">
+  <h3 class="group-name">Группа {{ group.groupName }}</h3>
+
+  <div class="students-list">
+    <div *ngFor="let student of group.students" class="student-item">
+
+      <div *ngIf="student.assignments.length > 0" class="assignments">
+        <div *ngFor="let assignment of student.assignments" class="assignment">
+          <span class="file-name">{{ assignment.fileName }}</span>
+          <span class="submission-date">
+            {{ assignment.submittedAt | date:'dd.MM.yyyy HH:mm' }}
+          </span>
+        </div>
+      </div>
+
+      <div *ngIf="student.assignments.length === 0" class="no-assignments">
+        Нет загруженных работ
+      </div>
+    </div>
+  </div>
+</div>
+-->
+
+<!-- group.component.html -->
+<div class="group-card">
+  <h3 class="group-name">Группа {{ group.groupName }}</h3>
+
+  <div class="students-list">
+    <div *ngFor="let student of group.students" class="student-item">
+      <div *ngIf="student.assignments.length > 0" class="assignments">
+        <div *ngFor="let assignment of student.assignments"
+             class="assignment"
+             (click)="viewStudentAssignment(assignment, student.studentId)">
+          <span class="file-name">{{ assignment.fileName }}</span>
+          <span class="submission-date">
+            {{ assignment.submittedAt | date:'dd.MM.yyyy HH:mm' }}
+          </span>
+        </div>
+      </div>
+
+      <div *ngIf="student.assignments.length === 0" class="no-assignments">
+        Нет загруженных работ
+      </div>
+    </div>
+  </div>
+</div>

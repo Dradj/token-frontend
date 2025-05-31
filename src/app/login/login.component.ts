@@ -25,8 +25,14 @@ export class LoginComponent {
     this.errorMessage = '';
 
     this.authService.login(this.email, this.password).subscribe({
-      next: async () => {
-        await this.router.navigate(['/courses']);
+      next: async (res) => {
+        const role = res.role;
+
+        if (role === '[ROLE_TEACHER]') {
+          await this.router.navigate(['/teacher-dashboard']);
+        } else {
+          await this.router.navigate(['/courses']);
+        }
       },
       error: () => {
         this.errorMessage = 'Ошибка при авторизации. Проверьте данные и попробуйте снова.';

@@ -13,7 +13,7 @@ export class AuthInterceptor implements HttpInterceptor {
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     // 1. Исключаем запросы на обновление токена
-    if (req.url.endsWith('/api/auth/refresh')) {
+    if (req.url.includes('/api/auth/')) {
       return next.handle(req);
     }
 
