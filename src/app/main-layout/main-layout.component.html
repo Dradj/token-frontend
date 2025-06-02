@@ -1,5 +1,16 @@
 <app-header></app-header>
+<div class="wallet-info">
+  <ng-container *ngIf="userAddress; else notConnected">
+    <span>Кошелек: {{ userAddress | slice:0:6 }}...{{ userAddress | slice:-4 }}</span>
+    <button mat-button color="warn" (click)="disconnectWallet()">Отключить</button>
+  </ng-container>
 
+  <ng-template #notConnected>
+    <button mat-button color="primary" (click)="showWalletDialog()">
+      Подключить кошелек
+    </button>
+  </ng-template>
+</div>
 <main class="content">
   <router-outlet></router-outlet>
 </main>
