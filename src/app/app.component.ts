@@ -1,8 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import {AuthService} from './services/auth.service';
-import {UserService} from './services/user.service';
-import {catchError, finalize, of, switchMap} from 'rxjs';
 import {CommonModule} from '@angular/common';
 
 @Component({
